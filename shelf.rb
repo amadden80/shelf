@@ -1,5 +1,6 @@
 require 'pry'
 require 'socket'
+require './request'
 
 # Server
 class Shelf
@@ -8,7 +9,7 @@ class Shelf
     @server = TCPServer.new(port)
   end
 
-  def serve(&block)
+  def serve()
 
     puts "                                listening on port #{ @port }..."
 
@@ -16,20 +17,27 @@ class Shelf
       Thread.start(@server.accept) do |client|
         puts "                                +++  #{Time.now} +++"
 
-        verb, path, protocol = client.gets.chomp.split(' ')
+        load './request.rb'
+        request = Request.new(client)
 
-        response_html = block.call()
+        unless ["/favicon.ico"].include? request.uri
 
-        header =  [
-                    "HTTP/1.1 200 OK",
-                    "Content-Type: text/xml; charset=utf-8",
-                    "Content-Length: #{ response_html.length }",
-                    ""
-                  ].join("\n")
+          response_html = yield request
 
-        response = header + "\n" + response_html
+          header =  [
+                      "HTTP/1.1 200 OK",
+                      "Content-Type: text/html; charset=utf-8",
+                      "Content-Length: #{ response_html.length }",
+                      ""
+                    ].join("\n")
 
-        client.puts response
+          response = header + "\n" + response_html
+
+          client.puts response
+
+        end
+
+        client.puts 'hi'
         client.close
 
         puts "                                ---  #{Time.now}  ---"
@@ -38,4 +46,5 @@ class Shelf
   end
 
 end
+
 
