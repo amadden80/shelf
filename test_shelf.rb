@@ -1,7 +1,6 @@
 require 'net/http'
 require 'test/unit'
-require './shelf'
-
+require './lib/shelf'
 
 class TestShelf<  Test::Unit::TestCase
 
